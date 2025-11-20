@@ -1,5 +1,5 @@
-import { ALPHA_MUL, ALPHA_MUL_INV, T0, T1, T2, T3, T4, T5, T6, T7 } from "./const";
-import { bytesToUint64s, uint64sToBytes } from "./utils";
+import { ALPHA_MUL, ALPHA_MUL_INV, T0, T1, T2, T3, T4, T5, T6, T7 } from "./const.js";
+import { bytesToUint64s, uint64sToBytes } from "./utils.js";
 
 const byte = (n: number | bigint, w: bigint) => Number((w>>(BigInt(n)*8n)) & 0xffn);
 const a_mul = (w: bigint) => (w << 8n) ^ (ALPHA_MUL[Number(w >> 56n)]);
