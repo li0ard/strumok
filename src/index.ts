@@ -1,11 +1,11 @@
 import { ALPHA_MUL, ALPHA_MUL_INV, T0, T1, T2, T3, T4, T5, T6, T7 } from "./const.js";
-import { bytesToUint64s, uint64sToBytes } from "./utils.js";
+import { bytesToUint64s, uint64sToBytes, type TArg, type TRet } from "./utils.js";
 
-const byte = (n: number | bigint, w: bigint) => Number((w>>(BigInt(n)*8n)) & 0xffn);
-const a_mul = (w: bigint) => (w << 8n) ^ (ALPHA_MUL[Number(w >> 56n)]);
-const ainv_mul = (w: bigint) => (w >> 8n) ^ (ALPHA_MUL_INV[Number(w & 0xffn)]);
-const T = (w: bigint) => ((T0[byte(0,(w))])^(T1[byte(1,(w))])^(T2[byte(2,(w))])^(T3[byte(3,(w))])^(T4[byte(4,(w))])^(T5[byte(5,(w))])^(T6[byte(6,(w))])^(T7[byte(7,(w))]));
-const not = (w: bigint) => {
+const byte = (n: number | bigint, w: bigint): number => Number((w>>(BigInt(n)*8n)) & 0xffn);
+const a_mul = (w: bigint): bigint => (w << 8n) ^ (ALPHA_MUL[Number(w >> 56n)]);
+const ainv_mul = (w: bigint): bigint => (w >> 8n) ^ (ALPHA_MUL_INV[Number(w & 0xffn)]);
+const T = (w: bigint): bigint => ((T0[byte(0,(w))])^(T1[byte(1,(w))])^(T2[byte(2,(w))])^(T3[byte(3,(w))])^(T4[byte(4,(w))])^(T5[byte(5,(w))])^(T6[byte(6,(w))])^(T7[byte(7,(w))]));
+const not = (w: bigint): bigint => {
     const MAX_UINT64 = (1n << 64n) - 1n;
     return MAX_UINT64 - (w & MAX_UINT64);
 }
@@ -25,7 +25,7 @@ export class Strumok {
      * @param key Encryption key (32/64 bytes)
      * @param iv Initialization vector (32 bytes)
      */
-    constructor(key: Uint8Array, iv: Uint8Array) {
+    constructor(key: TArg<Uint8Array>, iv: TArg<Uint8Array>) {
         if(iv.length !== 32) throw new Error("Unsupported IV length");
         this.key = bytesToUint64s(key);
         this.iv = bytesToUint64s(iv);
@@ -67,9 +67,7 @@ export class Strumok {
             this.S[13] = this.key[2];
             this.S[14] = not(this.key[1]);
             this.S[15] = this.key[0];
-        } else {
-            throw new Error("Unsupported key length");
-        }
+        } else throw new Error("Unsupported key length");
         this.r[0] = 0n;
         this.r[1] = 0n;
 
@@ -175,7 +173,7 @@ export class Strumok {
     }
 
     /** Generate next keystream */
-    next_stream(): BigUint64Array {
+    next_stream(): TRet<BigUint64Array> {
         let fsmtmp: bigint;
         let out_stream = new BigUint64Array(16);
 
@@ -279,7 +277,7 @@ export class Strumok {
     }
 
     /** Generate next keystream and perform encryption */
-    next_stream_full_crypt(in_: BigUint64Array): BigUint64Array {
+    next_stream_full_crypt(in_: TArg<BigUint64Array>): TRet<BigUint64Array> {
         let fsmtmp: bigint;
         let out = new BigUint64Array(16);
 
@@ -383,13 +381,13 @@ export class Strumok {
     }
 
     /** Set new initialization vector */
-    setIV(iv: Uint8Array): Strumok { return new Strumok(uint64sToBytes(this.key), iv); }
+    setIV(iv: TArg<Uint8Array>): Strumok { return new Strumok(uint64sToBytes(this.key), iv); }
 
     /**
      * Perform encryption/decryption
      * @param in_ Input data
      */
-    crypt(in_: Uint8Array): Uint8Array {
+    crypt(in_: TArg<Uint8Array>): TRet<Uint8Array> {
         const inl = in_.length;
         const out = new Uint8Array(inl);
         let inOffset = 0;
